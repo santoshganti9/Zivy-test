@@ -77,10 +77,10 @@ const EmployeeList = () => {
   };
 
   //to update local state to localStorage
-  useEffect(() => {
-    userListData.userList.length > 0 &&
-      saveToLocalStorage(userListData.userList, nextLink.current);
-  }, [userListData.userList]);
+  // useEffect(() => {
+  //   userListData.userList.length > 0 &&
+  //     saveToLocalStorage(userListData.userList, nextLink.current);
+  // }, [userListData.userList]);
 
   //code to check if the last ref is intersecting
   useEffect(() => {
