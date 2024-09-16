@@ -7,6 +7,25 @@ import Employee from "./employee";
 
 const INITIAL_URL = "https://api.github.com/orgs/mozilla/members";
 
+const saveToLocalStorage = (data: TUser[], nextLink: string) => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("userData", JSON.stringify(data));
+    nextLink && localStorage.setItem("nextLink", nextLink);
+    console.log("Data saved to localStorage!");
+  }
+};
+
+const getDataFromLocalStorage = () => {
+  if (typeof window !== "undefined") {
+    const savedItems = localStorage.getItem("userData");
+    const next = localStorage.getItem("nextLink");
+
+    if (savedItems) {
+      return { savedItems: JSON.parse(savedItems) as TUser[], next: next };
+    }
+  }
+};
+
 const EmployeeList = () => {
   const [userListData, setUserListData] = useState<{
     userList: TUser[];
@@ -22,21 +41,24 @@ const EmployeeList = () => {
   const nextLink = useRef<any>(null);
   //   const [nextLink, setNextLink] = useState<string | undefined>(undefined)
 
+  //Get Users API
   const getUsers = async (url: string) => {
     try {
       setUserListData((prev) => ({ ...prev, isLoading: true }));
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `${process.env.TOKEN}`,
-        },
-      });
+      const response = await fetch(
+        url
+        //   {
+        //   headers: {
+        //     Authorization: `${process.env.TOKEN}`,
+        //   },
+        // }
+      );
 
       //check if next page exists
       const linkHeader = response.headers.get("Link");
       const next = linkHeader
         ?.split(",")
         .find((link) => link.includes('rel="next"'));
-      console.log(next);
       if (next) {
         const nextUrl = next.match(/<([^>]+)>/)![1];
         nextLink.current = nextUrl;
@@ -44,7 +66,7 @@ const EmployeeList = () => {
         nextLink.current = null;
       }
 
-      //setting local state
+      //setting localuser state
       const json = await response.json();
       setUserListData((prev) => ({
         ...prev,
@@ -58,10 +80,16 @@ const EmployeeList = () => {
   };
 
   useEffect(() => {
+    userListData.userList.length > 0 &&
+      saveToLocalStorage(userListData.userList, nextLink.current);
+  }, [userListData.userList, nextLink]);
+
+  //code to check if the last ref is intersecting
+  useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          console.log("im inter ", nextLink);
+          console.log("im here");
           nextLink.current && getUsers(nextLink.current);
         }
       },
@@ -84,16 +112,25 @@ const EmployeeList = () => {
   }, []);
 
   useEffect(() => {
-    getUsers(`${INITIAL_URL}?page=${1}`);
+    const prevSavedData = getDataFromLocalStorage();
+    if (prevSavedData?.savedItems) {
+      setUserListData((prev) => ({
+        ...prev,
+        userList: prevSavedData?.savedItems,
+      }));
+      nextLink.current = prevSavedData.next;
+    } else {
+      getUsers(`${INITIAL_URL}?page=${1}`);
+    }
   }, []);
 
   return (
     <div className="user-list-container">
       {userListData.userList?.map((user: TUser) => {
         return (
-          <>
-            <Employee key={user.id} user={user} />{" "}
-          </>
+          <div key={user.id}>
+            <Employee user={user} />{" "}
+          </div>
         );
       })}
       <div
