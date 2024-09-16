@@ -45,14 +45,11 @@ const EmployeeList = () => {
   const getUsers = async (url: string) => {
     try {
       setUserListData((prev) => ({ ...prev, isLoading: true }));
-      const response = await fetch(
-        url
-        //   {
-        //   headers: {
-        //     Authorization: `${process.env.TOKEN}`,
-        //   },
-        // }
-      );
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `${process.env.TOKEN}`,
+        },
+      });
 
       //check if next page exists
       const linkHeader = response.headers.get("Link");
@@ -79,10 +76,11 @@ const EmployeeList = () => {
     }
   };
 
+  //to update local state to localStorage
   useEffect(() => {
     userListData.userList.length > 0 &&
       saveToLocalStorage(userListData.userList, nextLink.current);
-  }, [userListData.userList, nextLink]);
+  }, [userListData.userList]);
 
   //code to check if the last ref is intersecting
   useEffect(() => {
@@ -111,6 +109,7 @@ const EmployeeList = () => {
     };
   }, []);
 
+  // Load data from localStorage or make the initial API call
   useEffect(() => {
     const prevSavedData = getDataFromLocalStorage();
     if (prevSavedData?.savedItems) {
