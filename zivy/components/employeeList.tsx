@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { TUser } from "@/interfaces/employee";
 
 import Employee from "./employee";
+import EmployeeListStyles from "./styles/employeeListStyles";
 
 const INITIAL_URL = "https://api.github.com/orgs/mozilla/members";
 
@@ -52,7 +53,7 @@ const EmployeeList = () => {
       });
 
       //check if next page exists
-      const linkHeader = response.headers.get("Link");
+      const linkHeader = response?.headers.get("Link");
       const next = linkHeader
         ?.split(",")
         .find((link) => link.includes('rel="next"'));
@@ -64,7 +65,7 @@ const EmployeeList = () => {
       }
 
       //setting localuser state
-      const json = await response.json();
+      const json = await response?.json();
       setUserListData((prev) => ({
         ...prev,
         isLoading: false,
@@ -87,7 +88,7 @@ const EmployeeList = () => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          console.log("im here");
+          console.log(nextLink.current);
           nextLink.current && getUsers(nextLink.current);
         }
       },
@@ -107,7 +108,7 @@ const EmployeeList = () => {
         observer.unobserve(lastUserRef.current);
       }
     };
-  }, []);
+  }, [nextLink.current]);
 
   // Load data from localStorage or make the initial API call
   useEffect(() => {
@@ -124,21 +125,20 @@ const EmployeeList = () => {
   }, []);
 
   return (
-    <div className="user-list-container">
+    <EmployeeListStyles>
       {userListData.userList?.map((user: TUser) => {
-        return (
-          <div key={user.id}>
-            <Employee user={user} />{" "}
-          </div>
-        );
+        return <Employee key={user.id} user={user} />;
       })}
       <div
         className="scroll-helper"
         ref={lastUserRef}
         style={{ height: "1px", width: "1px" }}
       ></div>
-      {userListData.isLoading && <>Loading...</>}
-    </div>
+      {userListData.isLoading && <Employee loading={userListData.isLoading} />}
+      {userListData.isError && (
+        <>Some error has occured, please contact admin.</>
+      )}
+    </EmployeeListStyles>
   );
 };
 

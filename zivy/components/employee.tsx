@@ -2,14 +2,19 @@ import React from "react";
 
 import { TUser } from "@/interfaces/employee";
 
-// import EmployeeStyles from "./styles/employeeStyles";
+import EmployeeStyles from "./styles/employeeStyles";
 
 interface TProps {
-  user: TUser;
+  user?: TUser;
+  loading?: boolean;
 }
 
-const Employee = ({ user }: TProps) => {
-  return <div>{user.id}</div>;
+const Employee = ({ user, loading }: TProps) => {
+  return (
+    <EmployeeStyles loading={loading}>
+      {user ? user.id : "isLoading..."}
+    </EmployeeStyles>
+  );
 };
 
 export default Employee;
